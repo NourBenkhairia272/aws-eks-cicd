@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: aws-eks-cicd
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: aws-eks-cicd
+
+  template:
+    metadata:
+      labels:
+        app: aws-eks-cicd
+
+    spec:
+      containers:
+        - name: aws-eks-container
+          image: nourbkh/aws-eks-cicd:v1
+          ports:
+            - containerPort: 5000
