@@ -1,0 +1,36 @@
+```yaml
+version: 0.2
+
+env:
+  variables:
+    AWS_DEFAULT_REGION: us-east-1
+    EKS_CLUSTER_NAME: aws-eks-cicd
+    DOCKERHUB_USERNAME: nourbkh
+    DOCKERHUB_REPO: aws-eks-cicd
+
+phases:
+  pre_build:
+    commands:
+      - echo "Connexion à Docker Hub..."
+      - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+      - echo "Récupération des credentials EKS..."
+      - aws eks update-kubeconfig --region "$AWS_DEFAULT_REGION" --name "$EKS_CLUSTER_NAME"
+      - IMAGE_TAG=$(echo "$CODEBUILD_RESOLVED_SOURCE_VERSION" | cut -c 1-7)
+      - echo "Tag de l'image : $IMAGE_TAG"
+
+  build:
+    commands:
+      - echo "Construction de l'image Docker..."
+      - docker build -t "$DOCKERHUB_USERNAME/$DOCKERHUB_REPO:$IMAGE_TAG" .
+      - echo "Push de l'image vers Docker Hub..."
+      - docker push "$DOCKERHUB_USERNAME/$DOCKERHUB_REPO:$IMAGE_TAG"
+
+  post_build:
+    commands:
+      - echo "Déploiement sur EKS..."
+      - IMAGE_TAG=$(echo "$CODEBUILD_RESOLVED_SOURCE_VERSION" | cut -c 1-7)
+      - kubectl set image deployment/aws-eks-cicd aws-eks-container="$DOCKERHUB_USERNAME/$DOCKERHUB_REPO:$IMAGE_TAG"
+      - echo "Attente du déploiement..."
+      - kubectl rollout status deployment/aws-eks-cicd
+      - echo "Déploiement terminé !"
+```
