@@ -4,11 +4,11 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "Hello from AWS EKS CI/CD!"
+    return "Hello from AWS EKS CI/CD - Version 2!"
 
 @app.route("/version")
 def version():
-    return "Version 1.0"
+    return "Version 2.0"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
